@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#99a47c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="DB88">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>DB88 — Dumb Browser 88</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<script>
+  /* Apply saved theme BEFORE paint (no flash) */
+  try {
+    var _t = localStorage.getItem('db88_theme') || 'light';
+    document.documentElement.setAttribute('data-theme', _t);
+    document.addEventListener('DOMContentLoaded', function () {
+      document.body.setAttribute('data-theme', _t);
+    });
+  } catch (e) {}
+</script>
+<style>
+  :root {
+    --bg: #99a47c;
+    --surface: #8d9870;
+    --surface-2: #808b63;
+    --text: #151c10;
+    --text-muted: #334027;
+    --border: #151c10;
+    --accent: #151c10;
+    --accent-text: #99a47c;
+    --red: #7c1a1a;
+    --font-retro: 'VT323', 'Courier New', monospace;
+  }
+  
+  [data-theme="dark"] {
+    --bg: #12180e;
+    --surface: #1a2214;
+    --surface-2: #232d1b;
+    --text: #8c9770;
+    --text-muted: #586443;
+    --border: #8c9770;
+    --accent: #8c9770;
+    --accent-text: #12180e;
+    --red: #b83232;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+  
+  html, body {
+    height: 100%;
+    font-family: var(--font-retro);
+    font-size: 18px;
+    background: var(--bg); color: var(--text);
+    overflow: hidden;
+    letter-spacing: 0.5px;
+  }
+  body { display: flex; flex-direction: column; }
+
+  /* ============ APP REVEAL AFTER SPLASH ============ */
+  body.booting .copyright-bar,
+  body.booting .app-header,
+  body.booting .nav-bar,
+  body.booting .cats,
+  body.booting main { opacity: 0; }
+
+  body.ready .copyright-bar,
+  body.ready .app-header,
+  body.ready .nav-bar,
+  body.ready .cats,
+  body.ready main {
+    animation: appIn .55s steps(6) both;
+  }
+  body.ready .app-header  { animation-delay: .05s; }
+  body.ready .nav-bar     { animation-delay: .10s; }
+  body.ready .cats        { animation-delay: .16s; }
+  body.ready main         { animation-delay: .22s; }
+
+  @keyframes appIn {
+    0%   { opacity: 0; transform: translateY(-6px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ============ SPLASH / BOOT SCREEN ============ */
+  .splash {
+    position: fixed; inset: 0; z-index: 9999;
+    background: var(--bg); color: var(--text);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    overflow: hidden; cursor: pointer;
+    font-family: var(--font-retro);
+  }
+  /* CRT scanlines */
+  .splash::before {
+    content: ''; position: absolute; inset: 0; z-index: 1;
+    background: repeating-linear-gradient(to bottom,
+      rgba(0,0,0,.13) 0 2px, transparent 2px 4px);
+    pointer-events: none;
+  }
+  .splash-grid {
+    position: absolute; inset: -40px; z-index: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: .10;
+    animation: gridPan 6s linear infinite;
+  }
+  @keyframes gridPan { to { background-position: 40px 40px; } }
+
+  .splash-scan {
+    position: absolute; left: 0; right: 0; height: 90px; top: -90px; z-index: 2;
+    background: linear-gradient(to bottom,
+      transparent, rgba(255,255,255,.10), transparent);
+    pointer-events: none;
+    animation: scanMove 2.4s linear infinite;
+  }
+  @keyframes scanMove {
+    0%   { top: -90px; }
+    100% { top: 100%; }
+  }
+
+  .splash-inner {
+    position: relative; z-index: 3;
+    display: flex; flex-direction: column; align-items: center;
+    width: 100%; padding: 0 16px;
+  }
+
+  .splash-logo {
+    font-size: clamp(52px, 17vw, 96px);
+    line-height: 1; letter-spacing: 8px; font-weight: bold;
+    text-shadow: 4px 4px 0 var(--surface-2);
+    animation: logoIn .9s steps(5) both, glitch 3s 1.2s infinite steps(2);
+  }
+  @keyframes logoIn {
+    0%   { opacity: 0; transform: scale(.55) translateY(14px); filter: blur(5px); }
+    55%  { opacity: 1; transform: scale(1.10); filter: blur(0); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  @keyframes glitch {
+    0%, 88%, 100% { transform: translate(0, 0); }
+    89% { transform: translate(-3px, 1px); }
+    91% { transform: translate(3px, -1px); }
+    93% { transform: translate(-2px, 0); }
+    95% { transform: translate(2px, 1px); }
+    97% { transform: translate(0, -1px); }
+  }
+
+  .splash-sub {
+    margin-top: 6px;
+    font-size: clamp(13px, 4vw, 17px);
+    letter-spacing: .34em;
+    color: var(--text-muted);
+    opacity: 0;
+    animation: fadeUp .7s .35s steps(4) forwards;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .splash-bar {
+    position: relative;
+    width: min(330px, 76vw); height: 22px;
+    margin-top: 24px;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    box-shadow: 3px 3px 0 rgba(0,0,0,.25);
+    overflow: hidden;
+    opacity: 0;
+    animation: fadeUp .5s .5s steps(3) forwards;
+  }
+  .splash-fill {
+    height: 100%; width: 0%;
+    background: var(--accent);
+    transition: width .09s linear;
+    background-image: repeating-linear-gradient(90deg,
+      rgba(0,0,0,.22) 0 3px, transparent 3px 8px);
+  }
+  .splash-pct {
+    margin-top: 8px;
+    font-size: 15px; letter-spacing: 3px;
+    color: var(--text);
+    opacity: 0;
+    animation: fadeUp .5s .5s steps(3) forwards;
+  }
+
+  .splash-log {
+    margin-top: 16px;
+    width: min(340px, 84vw); height: 108px;
+    overflow: hidden;
+    text-align: left;
+    font-size: 15px; line-height: 1.35;
+    color: var(--text-muted);
+  }
+  .splash-log div {
+    opacity: 0;
+    animation: logIn .22s steps(2) forwards;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  @keyframes logIn {
+    from { opacity: 0; transform: translateX(-8px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  .splash-skip {
+    position: absolute; bottom: 44px; left: 0; right: 0; z-index: 3;
+    text-align: center; font-size: 13px; letter-spacing: 2px;
+    color: var(--text-muted);
+    opacity: 0;
+    animation: blinkSoft 1.1s 1.2s steps(2) infinite;
+  }
+  @keyframes blinkSoft {
+    0%, 100% { opacity: .25; }
+    50%      { opacity: .95; }
+  }
+  .splash-foot {
+    position: absolute; bottom: 16px; left: 0; right: 0; z-index: 3;
+    text-align: center; font-size: 12px; letter-spacing: 1px;
+    color: var(--text-muted);
+    opacity: .75;
+  }
+
+  /* Splash exit — CRT collapse */
+  .splash.hide {
+    pointer-events: none;
+    animation: splashOut .7s steps(7) forwards;
+  }
+  @keyframes splashOut {
+    0%   { opacity: 1; transform: scale(1);    clip-path: inset(0 0 0 0); }
+    45%  { opacity: .85; transform: scale(1.02); clip-path: inset(0 0 0 0); }
+    75%  { opacity: .35; transform: scale(1.05); clip-path: inset(28% 0 28% 0); }
+    100% { opacity: 0;  transform: scale(1.08); clip-path: inset(48% 0 48% 0); }
+  }
+
+  /* ============ REST OF UI ============ */
+  .copyright-bar {
+    background: var(--surface-2); 
+    border-bottom: 2px solid var(--border);
+    padding: 4px 10px; font-size: 14px; color: var(--text);
+    text-align: center; flex-shrink: 0;
+    text-transform: uppercase;
+  }
+
+  .app-header {
+    background: var(--surface); color: var(--text);
+    padding: 8px 10px; display: flex; align-items: center; gap: 8px;
+    flex-shrink: 0; border-bottom: 2px solid var(--border);
+  }
+  .app-header .title { 
+    flex: 1; font-size: 22px; font-weight: bold; 
+    text-transform: uppercase; letter-spacing: 1px; 
+  }
+  .app-header .title small { font-size: 14px; opacity: 0.8; }
+
+  .hdr-btn {
+    background: var(--bg); color: var(--text);
+    border: 2px solid var(--border); padding: 4px 10px;
+    font-size: 16px; font-family: var(--font-retro);
+    text-transform: uppercase; cursor: pointer;
+    box-shadow: 2px 2px 0px var(--border);
+    transition: background .15s steps(2), color .15s steps(2);
+  }
+  .hdr-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 0px 0px 0px var(--border);
+  }
+  .hdr-btn.active { 
+    background: var(--accent); color: var(--accent-text); 
+  }
+
+  .nav-bar {
+    background: var(--surface); padding: 8px;
+    display: flex; gap: 6px;
+    border-bottom: 2px solid var(--border);
+    flex-shrink: 0; align-items: center;
+  }
+  .nav-btn {
+    width: 38px; height: 38px;
+    background: var(--bg); border: 2px solid var(--border);
+    color: var(--text); font-size: 20px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-retro); flex-shrink: 0;
+    box-shadow: 2px 2px 0px var(--border);
+  }
+  .nav-btn:active:not(:disabled) {
+    transform: translate(2px, 2px);
+    box-shadow: 0px 0px 0px var(--border);
+  }
+  .nav-btn:disabled { opacity: 0.3; cursor: default; box-shadow: none; }
+  .nav-btn.active { background: var(--accent); color: var(--accent-text); }
+
+  .url-input {
+    flex: 1; min-width: 0; height: 38px; padding: 0 10px;
+    background: var(--bg); color: var(--text);
+    border: 2px solid var(--border);
+    font-family: var(--font-retro);
+    font-size: 16px; outline: none;
+    box-shadow: inset 2px 2px 0px rgba(0,0,0,0.15);
+  }
+  .url-input:focus { background: var(--surface-2); }
+
+  .cats {
+    background: var(--surface-2); padding: 6px 8px;
+    display: flex; gap: 6px; overflow-x: auto;
+    border-bottom: 2px solid var(--border);
+    flex-shrink: 0; scrollbar-width: none;
+  }
+  .cats::-webkit-scrollbar { display: none; }
+
+  .cat-chip {
+    background: var(--bg); color: var(--text);
+    border: 2px solid var(--border);
+    padding: 6px 14px; font-size: 16px;
+    cursor: pointer; font-family: var(--font-retro);
+    text-transform: uppercase; white-space: nowrap; flex-shrink: 0;
+    display: flex; align-items: center; gap: 6px;
+    box-shadow: 2px 2px 0px var(--border);
+  }
+  .cat-chip.active { 
+    background: var(--accent); color: var(--accent-text); 
+  }
+  .cat-chip .x {
+    background: var(--border); border: none; color: var(--bg);
+    width: 18px; height: 18px; cursor: pointer;
+    font-size: 14px; line-height: 1;
+    display: flex; align-items: center; justify-content: center; padding: 0;
+  }
+  .cat-chip.add {
+    background: transparent; color: var(--text); border: 2px dashed var(--border);
+    box-shadow: none;
+  }
+
+  main { flex: 1; overflow-y: auto; background: var(--bg); position: relative; }
+
+  .edit-bar {
+    display: none; padding: 8px 10px;
+    background: var(--surface-2);
+    border-bottom: 2px solid var(--border);
+    gap: 8px; align-items: center; font-size: 16px;
+    text-transform: uppercase;
+  }
+  .edit-bar.show { display: flex; }
+  .edit-bar span { flex: 1; color: var(--text); }
+  .edit-bar button {
+    padding: 4px 10px; font-size: 16px; font-family: var(--font-retro);
+    cursor: pointer; border: 2px solid var(--border);
+    background: var(--bg); color: var(--text);
+    box-shadow: 2px 2px 0px var(--border);
+  }
+  .edit-bar button.primary { background: var(--accent); color: var(--accent-text); }
+  .edit-bar button.danger { background: var(--red); color: #fff; }
+
+  .sites-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px; padding: 12px;
+  }
+  .site-card {
+    background: var(--surface); border: 2px solid var(--border);
+    padding: 10px; cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+    font-family: var(--font-retro); color: var(--text);
+    text-align: left; position: relative; min-height: 52px;
+    box-shadow: 3px 3px 0px var(--border);
+    text-transform: uppercase;
+    animation: cardIn .35s steps(4) both;
+  }
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .site-card:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0px var(--border);
+  }
+  .site-card .emoji { font-size: 20px; flex-shrink: 0; }
+  .site-card .name {
+    font-size: 16px; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap; flex: 1;
+  }
+  .site-card .x-btn {
+    position: absolute; top: 4px; right: 4px;
+    width: 22px; height: 22px;
+    background: var(--red); color: #fff;
+    border: 1px solid var(--border);
+    font-size: 14px; cursor: pointer;
+    display: none; align-items: center; justify-content: center;
+    padding: 0; line-height: 1;
+  }
+  .edit-mode .site-card .x-btn { display: flex; }
+
+  .viewer { display: none; flex-direction: column; flex: 1; position: relative; }
+  .viewer.active { display: flex; }
+  .viewer-frame { flex: 1; width: 100%; border: none; background: #fff; }
+  .viewer-msg {
+    position: absolute; inset: 0;
+    display: none; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 30px; background: var(--bg);
+    text-align: center; z-index: 10;
+  }
+  .viewer-msg.show { display: flex; }
+  .viewer-msg .icon { font-size: 56px; margin-bottom: 16px; }
+  .viewer-msg h2 { font-size: 22px; margin-bottom: 10px; text-transform: uppercase; }
+  .viewer-msg p {
+    color: var(--text-muted); font-size: 16px;
+    line-height: 1.4; max-width: 400px; margin-bottom: 16px;
+  }
+
+  .section-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 12px; background: var(--surface-2);
+    border-bottom: 2px solid var(--border);
+    font-size: 16px; color: var(--text);
+    position: sticky; top: 0; z-index: 5;
+    text-transform: uppercase;
+  }
+  .section-header button {
+    background: var(--red); border: 2px solid var(--border);
+    color: #fff; padding: 3px 8px; font-size: 14px;
+    cursor: pointer; font-family: var(--font-retro);
+    box-shadow: 2px 2px 0px var(--border);
+  }
+  .history-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 12px; border-bottom: 2px solid var(--border);
+    cursor: pointer; background: var(--surface);
+    animation: cardIn .3s steps(4) both;
+  }
+  .history-item:active { background: var(--accent); color: var(--accent-text); }
+  .history-item .info { flex: 1; min-width: 0; }
+  .history-item .url {
+    font-size: 16px; color: var(--text);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    text-transform: uppercase;
+  }
+  .history-item:active .url { color: var(--accent-text); }
+  .history-item .time { font-size: 14px; color: var(--text-muted); margin-top: 2px; }
+  .history-item .del {
+    background: var(--bg); border: 2px solid var(--border);
+    color: var(--text); width: 28px; height: 28px;
+    cursor: pointer; font-size: 16px; flex-shrink: 0;
+  }
+  .empty { text-align: center; padding: 60px 20px; color: var(--text-muted); font-size: 18px; text-transform: uppercase; }
+
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: none; align-items: center; justify-content: center;
+    z-index: 100; padding: 20px;
+  }
+  .modal-overlay.show { display: flex; animation: fadeIn .18s steps(3) both; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal {
+    background: var(--bg); border: 3px solid var(--border);
+    max-width: 440px; width: 100%;
+    max-height: 85vh; display: flex; flex-direction: column;
+    box-shadow: 6px 6px 0px rgba(0,0,0,0.4);
+    animation: modalIn .22s steps(4) both;
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: translateY(14px) scale(.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .modal-header {
+    background: var(--accent); color: var(--accent-text);
+    padding: 6px 10px;
+    display: flex; align-items: center; gap: 8px;
+    font-size: 18px; font-weight: bold;
+    text-transform: uppercase;
+  }
+  .modal-header .close {
+    margin-left: auto;
+    background: var(--bg); color: var(--text);
+    border: 2px solid var(--border); width: 24px; height: 24px;
+    cursor: pointer; font-size: 16px; font-weight: bold;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-retro);
+  }
+  .modal-body {
+    padding: 16px; overflow-y: auto;
+    font-size: 16px; line-height: 1.4;
+  }
+  .modal-body h3 {
+    font-size: 18px; margin: 14px 0 6px;
+    color: var(--text); text-transform: uppercase;
+    border-bottom: 2px solid var(--border);
+  }
+  .modal-body h3:first-child { margin-top: 0; }
+  .modal-body p { margin-bottom: 8px; }
+  .modal-body ul { margin: 6px 0 10px 20px; }
+  .modal-body li { margin-bottom: 4px; }
+  .modal-body code {
+    background: var(--surface-2); padding: 1px 5px;
+    border: 1px solid var(--border);
+  }
+  .modal-body label {
+    display: block; margin: 10px 0 4px;
+    font-size: 16px; color: var(--text);
+    text-transform: uppercase;
+  }
+  .modal-body input, .modal-body select {
+    width: 100%; padding: 8px 10px;
+    background: var(--surface); color: var(--text);
+    border: 2px solid var(--border);
+    font-family: var(--font-retro);
+    font-size: 16px; outline: none;
+  }
+  .modal-body input:focus, .modal-body select:focus { background: var(--surface-2); }
+  .emoji-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+  .emoji-row button {
+    width: 36px; height: 36px; font-size: 18px;
+    background: var(--surface); border: 2px solid var(--border);
+    cursor: pointer; padding: 0;
+  }
+  .emoji-row button.selected { background: var(--accent); border-color: var(--border); }
+  .modal-footer {
+    padding: 10px; border-top: 2px solid var(--border);
+    display: flex; justify-content: flex-end; gap: 8px;
+    background: var(--surface-2);
+  }
+  .btn {
+    padding: 6px 16px; font-family: var(--font-retro); font-size: 16px;
+    cursor: pointer; border: 2px solid var(--border);
+    background: var(--bg); color: var(--text); text-transform: uppercase;
+    box-shadow: 2px 2px 0px var(--border);
+  }
+  .btn.primary { background: var(--accent); color: var(--accent-text); }
+  .btn.danger { background: var(--red); color: #fff; }
+  .btn:active { transform: translate(2px, 2px); box-shadow: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .splash-grid, .splash-scan, .splash-logo { animation-duration: .01s !important; }
+  }
+</style>
+</head>
+<body data-theme="light" class="booting">
+
+<!-- ============ 6-SECOND BOOT SPLASH ============ -->
+<div id="splash" class="splash">
+  <div class="splash-grid"></div>
+  <div class="splash-scan"></div>
+  <div class="splash-inner">
+    <div class="splash-logo">DB88</div>
+    <div class="splash-sub">DUMB BROWSER 88</div>
+    <div class="splash-bar"><div class="splash-fill" id="splashFill"></div></div>
+    <div class="splash-pct" id="splashPct">000%</div>
+    <div class="splash-log" id="splashLog"></div>
+  </div>
+  <div class="splash-skip" id="splashSkip">[ TAP TO SKIP ]</div>
+  <div class="splash-foot">COPYRIGHT MC88 — mohamed005cheikh@gmail.com</div>
+</div>
+
+<div class="copyright-bar">
+  Copyright : mohamed005cheikh@gmail.com | by MC88
+</div>
+
+<div class="app-header">
+  <button class="hdr-btn" onclick="showAbout()">ⓘ About</button>
+  <div class="title">DB88 <small>— Dumb Browser 88</small></div>
+  <button class="hdr-btn" id="editBtn" onclick="toggleEdit()">⚙ Edit</button>
+  <button class="hdr-btn" id="themeBtn" onclick="toggleTheme()">🌙 Dark</button>
+</div>
+
+<div class="nav-bar">
+  <button class="nav-btn" id="btnBack" disabled>←</button>
+  <button class="nav-btn" id="btnFwd" disabled>→</button>
+  <button class="nav-btn" id="btnHome">⌂</button>
+  <input id="url" class="url-input" type="text" placeholder="TYPE URL AND PRESS ENTER..." autocomplete="off" spellcheck="false" />
+  <button class="nav-btn" id="btnGo">↵</button>
+  <button class="nav-btn" id="btnHistory">🕒</button>
+</div>
+
+<div class="cats" id="cats"></div>
+
+<div class="edit-bar" id="editBar">
+  <span>Edit mode</span>
+  <button class="primary" onclick="showAddSite()">+ Site</button>
+  <button class="primary" onclick="showAddFolder()">+ Folder</button>
+  <button class="danger" onclick="resetDefaults()">Reset</button>
+</div>
+
+<main id="main"></main>
+
+<div class="viewer" id="viewer">
+  <iframe id="frame" class="viewer-frame" src="about:blank"></iframe>
+  <div class="viewer-msg" id="viewerMsg">
+    <div class="icon">🤷</div>
+    <h2>This site can't be displayed</h2>
+    <p>The website refuses to be embedded in a frame, or it's taking too long. That's the site's decision — not a bug in DB88.</p>
+    <button class="btn primary" onclick="goHome()">Return Home</button>
+  </div>
+</div>
+
+<!-- About Modal -->
+<div class="modal-overlay" id="aboutModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span>ⓘ About DB88</span>
+      <button class="close" onclick="hideAbout()">✕</button>
+    </div>
+    <div class="modal-body">
+      <h3>WHAT IS DB88?</h3>
+      <p>DB88 (Dumb Browser 88) is an honest, minimal browser. It only opens what <strong>can</strong> be opened.</p>
+      <h3>WHY "DUMB"?</h3>
+      <p>Most browsers pretend they can do everything. DB88 doesn't. It opens sites that allow embedding inside a frame — and tells you the truth when they don't.</p>
+      <h3>THE RULES</h3>
+      <ul>
+        <li>Only <code>https://</code> sites</li>
+        <li>Only sites that permit <code>iframe</code> embedding</li>
+        <li>No tracking, no ads, no analytics</li>
+        <li>History and custom sites stay on <strong>your</strong> device</li>
+      </ul>
+      <h3>WHAT WORKS</h3>
+      <p>Wikipedia projects, archive.org, OpenStreetMap, educational tools, embed players, many small independent sites.</p>
+      <h3>WHAT WON'T WORK</h3>
+      <p>Google, Facebook, Instagram, X, Reddit, Amazon, and most large commercial platforms. They block embedding by design.</p>
+      <h3>EDIT MODE</h3>
+      <p>Tap <code>⚙ Edit</code> to add or remove folders and sites. Everything is saved in your browser.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn primary" onclick="hideAbout()">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Site Modal -->
+<div class="modal-overlay" id="siteModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span id="siteModalTitle">Add Site</span>
+      <button class="close" onclick="hideSiteModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <label>SITE NAME</label>
+      <input id="siteName" type="text" placeholder="e.g. Wikipedia" maxlength="40" />
+      <label>URL (https://)</label>
+      <input id="siteUrl" type="url" placeholder="https://example.com" />
+      <label>ICON</label>
+      <div class="emoji-row" id="emojiRow"></div>
+      <label>FOLDER</label>
+      <select id="siteFolder"></select>
+      <p style="margin-top:12px;font-size:14px;color:var(--text-muted)">
+        NOTE: The site must allow iframe embedding. If it doesn't, DB88 will show an error.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="hideSiteModal()">Cancel</button>
+      <button class="btn primary" onclick="saveSite()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Folder Modal -->
+<div class="modal-overlay" id="folderModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span>New Folder</span>
+      <button class="close" onclick="hideFolderModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <label>FOLDER NAME</label>
+      <input id="folderName" type="text" placeholder="e.g. My Tools" maxlength="30" />
+      <label>ICON</label>
+      <div class="emoji-row" id="folderEmojiRow"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="hideFolderModal()">Cancel</button>
+      <button class="btn primary" onclick="saveFolder()">Create</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ DEFAULT DATA ============
+const DEFAULT_DATA = {
+  categories: [
+    { id: 'news', name: '📰 News', sites: [
+      { name: 'Wikinews', url: 'https://en.wikinews.org', emoji: '📰' },
+      { name: 'Global Voices', url: 'https://globalvoices.org', emoji: '🗣️' },
+    ]},
+    { id: 'photos', name: '📸 Photos', sites: [
+      { name: 'Wikimedia Commons', url: 'https://commons.wikimedia.org', emoji: '🗂️' },
+      { name: 'StockSnap', url: 'https://stocksnap.io', emoji: '📷' },
+    ]},
+    { id: 'games', name: '🎮 Games', sites: [
+      { name: 'Klondike Solitaire', url: 'https://trysolitaire.com/embed/klondike', emoji: '🃏' },
+      { name: 'Spider Solitaire', url: 'https://trysolitaire.com/embed/spider', emoji: '🕷️' },
+      { name: 'FreeCell', url: 'https://trysolitaire.com/embed/freecell', emoji: '🃏' },
+      { name: 'Pyramid', url: 'https://trysolitaire.com/embed/pyramid', emoji: '🔺' },
+      { name: 'Tic-Tac-Toe', url: 'https://gamesiknow.com/embed/tic-tac-toe', emoji: '❌' },
+      { name: 'Bingo', url: 'https://gamesiknow.com/embed/bingo', emoji: '🎱' },
+      { name: 'Games Hub (142)', url: 'https://sausi-7.github.io/games/', emoji: '🕹️' },
+    ]},
+    { id: 'encyclopedia', name: '📚 Encyclopedia', sites: [
+      { name: 'Wikipedia', url: 'https://en.wikipedia.org', emoji: '📖' },
+      { name: 'Wiktionary', url: 'https://en.wiktionary.org', emoji: '📚' },
+      { name: 'Wikisource', url: 'https://en.wikisource.org', emoji: '📜' },
+      { name: 'Wikiquote', url: 'https://en.wikiquote.org', emoji: '💬' },
+      { name: 'Open Library', url: 'https://openlibrary.org', emoji: '📗' },
+      { name: 'Internet Archive', url: 'https://archive.org', emoji: '🏛️' },
+      { name: 'Project Gutenberg', url: 'https://www.gutenberg.org', emoji: '📕' },
+    ]},
+  ]
+};
+
+const DATA_KEY = 'db88_data_v4';
+const HISTORY_KEY = 'db88_history';
+const THEME_KEY = 'db88_theme';
+const MAX_HISTORY = 200;
+const EMOJIS = ['📖','📚','🎓','🧮','📐','📈','🔬','🎯','🧩','🔍','🌍','🗺️','📊','📉','⏱️','▶️','🎬','🎵','🎧','📹','✏️','🔧','📦','📜','🐟','🔁','⚡','🎨','🎭','🖼️','🗣️','📝','🗒️','🐦','📸','👽','✈️','🎮','📅','📆','🗿','🔗','🌄','🌐','🛠️','⭐','💡','🚀','🔥','💎','🎪','🏠','🌈','☕','📰','🗞️','📡','📷','🗂️','📕','📗','📘','📙','♟️','🃏','🎱','🔢','❌','🔴','🕷️','🦆','🏛️','📺','🏆','🎲','🎰','🧠','🎤','🎸','🎺','🥁','🔺','📻'];
+
+let data = null;
+let editMode = false;
+let navStack = [];
+let navPointer = -1;
+let currentCategory = 'all';
+let showingHistory = false;
+let loadTimer = null;
+let loaded = false;
+let selectedEmoji = '⭐';
+let selectedFolderEmoji = '📁';
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(DATA_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return JSON.parse(JSON.stringify(DEFAULT_DATA));
+}
+
+function saveData() { localStorage.setItem(DATA_KEY, JSON.stringify(data)); }
+
+function resetDefaults() {
+  if (!confirm('Reset all folders and sites to defaults?\n\nYour history will be kept.')) return;
+  data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  saveData();
+  currentCategory = 'all';
+  render();
+}
+
+function normalize(input) {
+  let url = (input || '').trim();
+  if (!url) return null;
+  if (!url.startsWith('http://') && !url.startsWith('https://')) url = 'https://' + url;
+  try { new URL(url); } catch { return null; }
+  return url;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+function shortUrl(url) {
+  try {
+    const u = new URL(url);
+    return u.hostname + (u.pathname !== '/' ? u.pathname : '');
+  } catch { return url; }
+}
+
+function timeAgo(ts) {
+  const diff = Date.now() - ts;
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+
+function generateId() {
+  return 'cat_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+}
+
+/* ===== 2 THEMES ===== */
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  document.body.dataset.theme = theme;
+  const btn = document.getElementById('themeBtn');
+  if (btn) btn.textContent = theme === 'light' ? '🌙 Dark' : '☀ Light';
+  localStorage.setItem(THEME_KEY, theme);
+}
+function toggleTheme() {
+  applyTheme(document.body.dataset.theme === 'light' ? 'dark' : 'light');
+}
+
+function loadHistoryLog() {
+  try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; } catch { return []; }
+}
+function saveHistoryLog(list) {
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(list.slice(0, MAX_HISTORY)));
+}
+function addToHistoryLog(url) {
+  const log = loadHistoryLog();
+  if (log[0] && log[0].url === url) log[0].time = Date.now();
+  else log.unshift({ url, time: Date.now() });
+  saveHistoryLog(log);
+}
+function removeFromHistoryLog(index) {
+  const log = loadHistoryLog();
+  log.splice(index, 1);
+  saveHistoryLog(log);
+  render();
+}
+function clearHistoryLog() {
+  if (!confirm('Clear all history?')) return;
+  localStorage.removeItem(HISTORY_KEY);
+  render();
+}
+
+function pushNavigation(url) {
+  navStack = navStack.slice(0, navPointer + 1);
+  if (navStack[navStack.length - 1] !== url) navStack.push(url);
+  navPointer = navStack.length - 1;
+  updateNavButtons();
+}
+function canGoBack() { return navPointer > 0; }
+function canGoForward() { return navPointer < navStack.length - 1; }
+function updateNavButtons() {
+  document.getElementById('btnBack').disabled = !canGoBack();
+  document.getElementById('btnFwd').disabled = !canGoForward();
+}
+
+function loadIntoFrame(url) {
+  const viewerMsg = document.getElementById('viewerMsg');
+  viewerMsg.classList.remove('show');
+  loaded = false;
+  clearTimeout(loadTimer);
+  loadTimer = setTimeout(() => { if (!loaded) viewerMsg.classList.add('show'); }, 4000);
+  document.getElementById('frame').src = url;
+  document.getElementById('url').value = url;
+}
+
+function showSite(url, options = {}) {
+  const { addToStack = true } = options;
+  document.getElementById('main').style.display = 'none';
+  document.getElementById('viewer').classList.add('active');
+  loadIntoFrame(url);
+  if (addToStack) pushNavigation(url);
+  addToHistoryLog(url);
+}
+
+function goHome() {
+  document.getElementById('viewer').classList.remove('active');
+  document.getElementById('viewerMsg').classList.remove('show');
+  document.getElementById('main').style.display = 'block';
+  document.getElementById('frame').src = 'about:blank';
+  document.getElementById('url').value = '';
+  showingHistory = false;
+  document.getElementById('btnHistory').classList.remove('active');
+  render();
+}
+
+function goBack() {
+  if (!canGoBack()) return;
+  navPointer--;
+  loadIntoFrame(navStack[navPointer]);
+  updateNavButtons();
+}
+function goForward() {
+  if (!canGoForward()) return;
+  navPointer++;
+  loadIntoFrame(navStack[navPointer]);
+  updateNavButtons();
+}
+function openFromInput() {
+  const url = normalize(document.getElementById('url').value);
+  if (!url) return;
+  document.getElementById('url').blur();
+  showSite(url);
+}
+
+function toggleEdit() {
+  editMode = !editMode;
+  document.getElementById('editBtn').classList.toggle('active', editMode);
+  document.getElementById('editBtn').textContent = editMode ? '✓ Done' : '⚙ Edit';
+  document.getElementById('editBar').classList.toggle('show', editMode);
+  document.body.classList.toggle('edit-mode', editMode);
+  render();
+}
+
+function render() {
+  renderCats();
+  if (showingHistory) renderHistory();
+  else renderSites();
+}
+
+function renderCats() {
+  const cats = [{ id: 'all', name: '★ All' }, ...data.categories];
+  let html = cats.map(c => {
+    const active = currentCategory === c.id ? 'active' : '';
+    const del = (editMode && c.id !== 'all')
+      ? `<span class="x" onclick="event.stopPropagation(); deleteFolder('${c.id}')">✕</span>` : '';
+    return `<button class="cat-chip ${active}" onclick="selectCategory('${c.id}')">${escapeHtml(c.name)}${del}</button>`;
+  }).join('');
+  if (editMode) {
+    html += `<button class="cat-chip add" onclick="showAddFolder()">+ Folder</button>`;
+  }
+  document.getElementById('cats').innerHTML = html;
+}
+
+function selectCategory(id) {
+  currentCategory = id;
+  showingHistory = false;
+  document.getElementById('btnHistory').classList.remove('active');
+  render();
+}
+
+function renderSites() {
+  let sites;
+  if (currentCategory === 'all') {
+    sites = data.categories.flatMap(c => c.sites.map(s => ({ ...s, _catId: c.id })));
+  } else {
+    const cat = data.categories.find(c => c.id === currentCategory);
+    sites = cat ? cat.sites.map(s => ({ ...s, _catId: cat.id })) : [];
+  }
+
+  const main = document.getElementById('main');
+  if (sites.length === 0 && !editMode) {
+    main.innerHTML = `<div class="empty">No sites in this folder<br><br>Tap ⚙ Edit to add one</div>`;
+    return;
+  }
+
+  main.innerHTML = `
+    <div class="sites-grid">
+      ${sites.map((s, i) => {
+        const idx = data.categories.findIndex(c => c.id === s._catId);
+        const siteIdx = data.categories[idx].sites.findIndex(x => x.url === s.url);
+        const xBtn = editMode
+          ? `<button class="x-btn" onclick="event.stopPropagation(); deleteSite('${s._catId}', ${siteIdx})">✕</button>`
+          : '';
+        return `
+          <button class="site-card" style="animation-delay:${Math.min(i * 0.02, 0.4)}s" onclick="openSite('${escapeHtml(s.url)}')">
+            <span class="emoji">${s.emoji || '⭐'}</span>
+            <span class="name">${escapeHtml(s.name)}</span>
+            ${xBtn}
+          </button>
+        `;
+      }).join('')}
+    </div>
+    ${sites.length === 0 ? '<div class="empty">Empty folder</div>' : ''}
+  `;
+}
+
+function openSite(url) { showSite(url); }
+
+function renderHistory() {
+  const log = loadHistoryLog();
+  const main = document.getElementById('main');
+  if (log.length === 0) {
+    main.innerHTML = `
+      <div class="section-header"><span>HISTORY</span></div>
+      <div class="empty">No sites visited yet</div>`;
+    return;
+  }
+  main.innerHTML = `
+    <div class="section-header">
+      <span>HISTORY — ${log.length} entries</span>
+      <button onclick="clearHistoryLog()">CLEAR ALL</button>
+    </div>
+    ${log.map((item, i) => `
+      <div class="history-item" style="animation-delay:${Math.min(i * 0.015, 0.35)}s" onclick="openSite('${escapeHtml(item.url)}')">
+        <div class="info">
+          <div class="url">${escapeHtml(shortUrl(item.url))}</div>
+          <div class="time">${timeAgo(item.time)}</div>
+        </div>
+        <button class="del" onclick="event.stopPropagation(); removeFromHistoryLog(${i})">✕</button>
+      </div>
+    `).join('')}`;
+}
+
+function toggleHistory() {
+  showingHistory = !showingHistory;
+  document.getElementById('btnHistory').classList.toggle('active', showingHistory);
+  document.getElementById('viewer').classList.remove('active');
+  document.getElementById('main').style.display = 'block';
+  render();
+}
+
+function deleteSite(catId, siteIdx) {
+  const cat = data.categories.find(c => c.id === catId);
+  if (!cat) return;
+  const site = cat.sites[siteIdx];
+  if (!confirm(`Delete "${site.name}"?`)) return;
+  cat.sites.splice(siteIdx, 1);
+  saveData();
+  render();
+}
+
+function deleteFolder(catId) {
+  const cat = data.categories.find(c => c.id === catId);
+  if (!cat) return;
+  if (!confirm(`Delete folder "${cat.name}" and all its sites?`)) return;
+  data.categories = data.categories.filter(c => c.id !== catId);
+  if (currentCategory === catId) currentCategory = 'all';
+  saveData();
+  render();
+}
+
+function renderEmojiRow(containerId, current, onClickName) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = EMOJIS.map(e =>
+    `<button class="${e === current ? 'selected' : ''}" onclick="${onClickName}('${e}')">${e}</button>`
+  ).join('');
+}
+
+function selectEmoji(e) {
+  selectedEmoji = e;
+  renderEmojiRow('emojiRow', selectedEmoji, 'selectEmoji');
+}
+function selectFolderEmoji(e) {
+  selectedFolderEmoji = e;
+  renderEmojiRow('folderEmojiRow', selectedFolderEmoji, 'selectFolderEmoji');
+}
+
+function showAddSite() {
+  selectedEmoji = '⭐';
+  document.getElementById('siteModalTitle').textContent = 'Add Site';
+  document.getElementById('siteName').value = '';
+  document.getElementById('siteUrl').value = '';
+  const sel = document.getElementById('siteFolder');
+  sel.innerHTML = data.categories.map(c =>
+    `<option value="${c.id}">${escapeHtml(c.name)}</option>`
+  ).join('');
+  if (currentCategory !== 'all' && data.categories.find(c => c.id === currentCategory)) {
+    sel.value = currentCategory;
+  }
+  renderEmojiRow('emojiRow', selectedEmoji, 'selectEmoji');
+  document.getElementById('siteModal').classList.add('show');
+}
+
+function hideSiteModal() {
+  document.getElementById('siteModal').classList.remove('show');
+}
+
+function saveSite() {
+  const name = document.getElementById('siteName').value.trim();
+  const rawUrl = document.getElementById('siteUrl').value.trim();
+  const catId = document.getElementById('siteFolder').value;
+  const url = normalize(rawUrl);
+
+  if (!name) return alert('Please enter a site name');
+  if (!url) return alert('Please enter a valid URL');
+
+  const cat = data.categories.find(c => c.id === catId);
+  if (!cat) return alert('Folder not found');
+
+  cat.sites.push({ name, url, emoji: selectedEmoji });
+  saveData();
+  hideSiteModal();
+  currentCategory = catId;
+  render();
+}
+
+function showAddFolder() {
+  selectedFolderEmoji = '📁';
+  document.getElementById('folderName').value = '';
+  renderEmojiRow('folderEmojiRow', selectedFolderEmoji, 'selectFolderEmoji');
+  document.getElementById('folderModal').classList.add('show');
+}
+function hideFolderModal() {
+  document.getElementById('folderModal').classList.remove('show');
+}
+function saveFolder() {
+  const name = document.getElementById('folderName').value.trim();
+  if (!name) return alert('Please enter a folder name');
+  const id = generateId();
+  data.categories.push({
+    id,
+    name: `${selectedFolderEmoji} ${name}`,
+    sites: []
+  });
+  saveData();
+  hideFolderModal();
+  currentCategory = id;
+  render();
+}
+
+function showAbout() { document.getElementById('aboutModal').classList.add('show'); }
+function hideAbout() { document.getElementById('aboutModal').classList.remove('show'); }
+
+document.getElementById('aboutModal').addEventListener('click', e => {
+  if (e.target.id === 'aboutModal') hideAbout();
+});
+document.getElementById('siteModal').addEventListener('click', e => {
+  if (e.target.id === 'siteModal') hideSiteModal();
+});
+document.getElementById('folderModal').addEventListener('click', e => {
+  if (e.target.id === 'folderModal') hideFolderModal();
+});
+
+/* ===== BUTTON EVENT LISTENERS ===== */
+document.getElementById('btnBack').addEventListener('click', goBack);
+document.getElementById('btnFwd').addEventListener('click', goForward);
+document.getElementById('btnHome').addEventListener('click', goHome);
+document.getElementById('btnGo').addEventListener('click', openFromInput);
+document.getElementById('btnHistory').addEventListener('click', toggleHistory);
+/* NOTE: themeBtn already uses inline onclick="toggleTheme()" —
+   do NOT add another listener here, otherwise it toggles twice and appears broken. */
+document.getElementById('url').addEventListener('keydown', e => {
+  if (e.key === 'Enter') openFromInput();
+});
+document.getElementById('frame').addEventListener('load', () => {
+  loaded = true;
+  clearTimeout(loadTimer);
+  document.getElementById('viewerMsg').classList.remove('show');
+});
+
+data = loadData();
+applyTheme(localStorage.getItem(THEME_KEY) || 'light');
+render();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+
+/* ============================================================
+   BOOT SPLASH — 6 SECONDS OF ANIMATION BEFORE ENTERING THE SITE
+   ============================================================ */
+(function bootSplash() {
+  const splash  = document.getElementById('splash');
+  const fill    = document.getElementById('splashFill');
+  const pctEl   = document.getElementById('splashPct');
+  const logEl   = document.getElementById('splashLog');
+  if (!splash) { document.body.classList.remove('booting'); return; }
+
+  const SPLASH_MS = 6000;          // ← 6 seconds total
+  const t0 = performance.now();
+  let done = false;
+  let rafId = null;
+  const timers = [];
+
+  const LOG = [
+    [ 150, '> boot db88 v8.8'],
+    [ 900, '> dumb engine ......... OK'],
+    [1750, '> iframe probe ........ OK'],
+    [2650, '> tracker blocker ..... ON'],
+    [3500, '> local storage ....... OK'],
+    [4300, '> pixel warmup ........ OK'],
+    [5100, '> ready.']
+  ];
+
+  LOG.forEach(function (entry) {
+    timers.push(setTimeout(function () {
+      if (done) return;
+      const line = document.createElement('div');
+      line.textContent = entry[1];
+      logEl.appendChild(line);
+      while (logEl.children.length > 6) logEl.removeChild(logEl.firstChild);
+    }, entry[0]));
+  });
+
+  function frame(now) {
+    const t = Math.min(1, (now - t0) / SPLASH_MS);
+    const pct = Math.floor(t * 100);
+    fill.style.width = pct + '%';
+    pctEl.textContent = String(pct).padStart(3, '0') + '%';
+    if (t < 1) rafId = requestAnimationFrame(frame);
+    else finish();
+  }
+
+  function finish() {
+    if (done) return;
+    done = true;
+    cancelAnimationFrame(rafId);
+    timers.forEach(clearTimeout);
+    document.removeEventListener('keydown', onKey);
+    splash.classList.add('hide');
+    document.body.classList.remove('booting');
+    document.body.classList.add('ready');
+    setTimeout(function () {
+      if (splash.parentNode) splash.parentNode.removeChild(splash);
+    }, 800);
+  }
+
+  function onKey(e) {
+    if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') finish();
+  }
+
+  splash.addEventListener('click', finish);
+  document.addEventListener('keydown', onKey);
+
+  rafId = requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
