@@ -84,7 +84,7 @@ If a site refuses to be embedded inside a frame, DB88 shows a page that says —
 ## 🧭 How it works
 
 **1. Open it.**  
-One HTML file, plus a `manifest.json` and a service worker for PWA install. Open it in any browser and the boot sequence starts.
+One HTML file.
 
 **2. Watch it boot — or skip it.**  
 Tap the screen or press any key to skip the six-second intro.
